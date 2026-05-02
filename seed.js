@@ -1,0 +1,69 @@
+import dotenv from "dotenv";
+import bcrypt from "bcryptjs";
+import connectDb from "./config/db.js";
+import { User } from "./models/User.js";
+import { Shop } from "./models/Shop.js";
+import { MenuItem } from "./models/MenuItem.js";
+
+dotenv.config();
+
+const VENDOR_EMAIL = "vendor@college.test";
+const STUDENT_EMAIL = "student@college.test";
+const SHOP_SLUG = "main-canteen";
+const PASSWORD = "password123";
+
+async function seed() {
+  await connectDb();
+
+  await User.deleteMany({ email: { $in: [VENDOR_EMAIL, STUDENT_EMAIL] } });
+
+  const oldShop = await Shop.findOne({ slug: SHOP_SLUG });
+  if (oldShop) {
+    await MenuItem.deleteMany({ shop: oldShop._id });
+    await Shop.deleteOne({ _id: oldShop._id });
+    await User.updateMany({ shop: oldShop._id }, { $set: { shop: null } });
+  }
+
+  const passwordHash = await bcrypt.hash(PASSWORD, 10);
+
+  const vendor = await User.create({
+    name: "Canteen Vendor",
+    email: VENDOR_EMAIL,
+    passwordHash,
+    role: "vendor",
+  });
+
+  const shop = await Shop.create({
+    name: "Main Canteen",
+    slug: SHOP_SLUG,
+    description: "North Indian, snacks, and beverages.",
+    vendor: vendor._id,
+  });
+
+  await User.updateOne({ _id: vendor._id }, { $set: { shop: shop._id } });
+
+  await User.create({
+    name: "Test Student",
+    email: STUDENT_EMAIL,
+    passwordHash,
+    role: "student",
+  });
+
+  await MenuItem.insertMany([
+    { shop: shop._id, name: "Masala Dosa", description: "Crispy with potato filling.", price: 60, available: true },
+    { shop: shop._id, name: "Samosa (2 pcs)", description: "", price: 20, available: true },
+    { shop: shop._id, name: "Masala Chai", description: "", price: 15, available: true },
+    { shop: shop._id, name: "Veg Thali", description: "Rice, dal, sabzi, roti.", price: 80, available: true },
+  ]);
+
+  console.log("Seed complete.");
+  console.log(`  Vendor: ${VENDOR_EMAIL} / ${PASSWORD}`);
+  console.log(`  Student: ${STUDENT_EMAIL} / ${PASSWORD}`);
+  console.log(`  Shop URL: http://localhost:${process.env.PORT || 3000}/shops/${SHOP_SLUG}`);
+  process.exit(0);
+}
+
+seed().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

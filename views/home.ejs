@@ -6,13 +6,26 @@
 
   <% if (!currentUser) { %>
     <div class="row">
+      <a class="btn" href="/shops">Browse canteens</a>
       <a class="btn" href="/signup">Create account</a>
       <a class="btn btn--ghost" href="/login">Log in</a>
     </div>
   <% } else { %>
     <div class="card">
       <p>You’re logged in as <strong><%= currentUser.role %></strong>.</p>
-      <p class="muted">Next: we’ll add shops, menus, cart, orders, and the vendor OTP verify screen.</p>
+      <% if (currentUser.role === "student") { %>
+        <p class="muted">Browse canteens, add items to your cart, and place an order to get a pickup code.</p>
+        <div class="row">
+          <a class="btn" href="/shops">Browse canteens</a>
+          <a class="btn btn--ghost" href="/orders">My orders</a>
+        </div>
+      <% } else { %>
+        <p class="muted">Use Verify pickup when a student shows their code at the counter.</p>
+        <div class="row">
+          <a class="btn" href="/vendor/verify">Verify pickup</a>
+          <a class="btn btn--ghost" href="/shops">View menus (public)</a>
+        </div>
+      <% } %>
     </div>
   <% } %>
 </section>

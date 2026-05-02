@@ -1,0 +1,60 @@
+<%- include("../partials/header", { pageTitle }) %>
+
+<section class="hero hero--compact">
+  <h1>Your cart</h1>
+  <% if (shop) { %>
+    <p class="muted">From <a href="/shops/<%= shop.slug %>"><%= shop.name %></a></p>
+  <% } %>
+</section>
+
+<% if (!lines.length) { %>
+  <div class="card">
+    <p>Your cart is empty.</p>
+    <a class="btn" href="/shops">Browse canteens</a>
+  </div>
+<% } else { %>
+  <div class="card">
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Price</th>
+          <th>Qty</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% lines.forEach((line) => { %>
+          <tr>
+            <td>
+              <%= line.name %>
+              <% if (!line.available) { %>
+                <span class="tag tag--warn">Unavailable</span>
+              <% } %>
+            </td>
+            <td>₹<%= line.price.toFixed(2) %></td>
+            <td>
+              <form method="post" action="/cart/line" class="inline-form">
+                <input type="hidden" name="menuItemId" value="<%= line.menuItemId %>" />
+                <input class="input--qty" name="quantity" type="number" min="0" max="99" value="<%= line.quantity %>" />
+                <button class="btn btn--ghost btn--small" type="submit">Update</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+    <p class="cart-total"><strong>Subtotal:</strong> ₹<%= subtotal.toFixed(2) %></p>
+    <div class="row row--split">
+      <form method="post" action="/cart/clear" onsubmit="return confirm('Clear cart?');">
+        <button class="btn btn--ghost" type="submit">Clear cart</button>
+      </form>
+      <form method="post" action="/orders/checkout">
+        <button class="btn" type="submit">Place order (mock pay)</button>
+      </form>
+    </div>
+    <p class="muted small">Payment is simulated. You will get a pickup code to show at the counter.</p>
+  </div>
+<% } %>
+
+<%- include("../partials/footer") %>

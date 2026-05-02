@@ -11,6 +11,14 @@
       <div class="container topbar__inner">
         <a class="brand" href="/">Smart Canteen</a>
         <nav class="nav">
+          <a class="nav__link" href="/shops">Canteens</a>
+          <% if (currentUser && currentUser.role === "student") { %>
+            <a class="nav__link" href="/cart">Cart<% if (typeof cartCount === "number" && cartCount > 0) { %> (<%= cartCount %>)<% } %></a>
+            <a class="nav__link" href="/orders">Orders</a>
+          <% } %>
+          <% if (currentUser && currentUser.role === "vendor") { %>
+            <a class="nav__link" href="/vendor/verify">Verify pickup</a>
+          <% } %>
           <% if (currentUser) { %>
             <span class="nav__text">Hi, <%= currentUser.name %></span>
             <form method="post" action="/logout" class="inline">

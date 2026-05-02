@@ -1,0 +1,21 @@
+<%- include("../partials/header", { pageTitle }) %>
+
+<section class="hero hero--compact">
+  <h1>Verify pickup</h1>
+  <p class="muted">Enter the student’s 6-digit code to mark their order as collected.</p>
+  <% if (typeof pending === "number") { %>
+    <p class="muted small"><%= pending %> order(s) waiting for pickup.</p>
+  <% } %>
+</section>
+
+<div class="card">
+  <form method="post" action="/vendor/verify" class="form verify-form">
+    <label>
+      <span>Pickup code</span>
+      <input name="otp" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="12" autocomplete="one-time-code" placeholder="000000" required />
+    </label>
+    <button class="btn" type="submit">Complete order</button>
+  </form>
+</div>
+
+<%- include("../partials/footer") %>

@@ -1,0 +1,35 @@
+<%- include("../partials/header", { pageTitle }) %>
+
+<div class="breadcrumb">
+  <a href="/orders">My orders</a>
+  <span class="muted"> / </span>
+  <span>…<%= String(order._id).slice(-6) %></span>
+</div>
+
+<div class="card order-detail">
+  <div class="order-detail__head">
+    <h1>Order details</h1>
+    <span class="tag tag--<%= order.status === "completed" ? "ok" : order.status === "paid" ? "pending" : "muted" %>"><%= order.status %></span>
+  </div>
+  <p class="muted"><%= order.shop?.name || "Canteen" %> · <%= new Date(order.createdAt).toLocaleString() %></p>
+
+  <% if (order.status === "paid") { %>
+    <div class="otp-box">
+      <p class="otp-box__label">Pickup code</p>
+      <p class="otp-box__code"><%= order.pickupOtp %></p>
+      <p class="muted small">Show this code at the counter. The vendor will enter it to complete your order.</p>
+    </div>
+  <% } else if (order.status === "completed") { %>
+    <p class="muted">This order was picked up. (Code was <strong class="mono"><%= order.pickupOtp %></strong>.)</p>
+  <% } %>
+
+  <h2 class="h2">Items</h2>
+  <ul class="plain-list">
+    <% order.items.forEach((line) => { %>
+      <li><%= line.quantity %> × <%= line.name %> — ₹<%= (line.price * line.quantity).toFixed(2) %></li>
+    <% }) %>
+  </ul>
+  <p class="cart-total"><strong>Total:</strong> ₹<%= order.total.toFixed(2) %></p>
+</div>
+
+<%- include("../partials/footer") %>

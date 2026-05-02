@@ -6,6 +6,10 @@ import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import connectDb from "./config/db.js";
 import { authRouter } from "./routes/auth.js";
+import { shopsRouter } from "./routes/shops.js";
+import { cartRouter } from "./routes/cart.js";
+import { ordersRouter } from "./routes/orders.js";
+import { vendorRouter } from "./routes/vendor.js";
 
 dotenv.config();
 
@@ -36,6 +40,10 @@ app.use((req, res, next) => {
     ? { id: req.session.userId, role: req.session.role, name: req.session.name }
     : null;
 
+  const cart = req.session?.cart;
+  const items = cart && Array.isArray(cart.items) ? cart.items : [];
+  res.locals.cartCount = items.reduce((sum, line) => sum + (Number(line.quantity) || 0), 0);
+
   res.locals.flash = {
     success: req.flash("success"),
     error: req.flash("error"),
@@ -49,6 +57,10 @@ app.get("/", (req, res) => {
 });
 
 app.use(authRouter);
+app.use(shopsRouter);
+app.use(cartRouter);
+app.use(ordersRouter);
+app.use(vendorRouter);
 
 try {
   await connectDb();
