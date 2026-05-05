@@ -12,6 +12,85 @@ vendorRouter.get("/vendor/menu", requireDb, requireAuth, requireVendor, requireV
   res.render("vendor/menu", { pageTitle: "Manage menu", menuItems });
 });
 
+vendorRouter.post("/vendor/menu", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
+  const name = String((req.body && req.body.name) || "").trim();
+  const description = String((req.body && req.body.description) || "").trim();
+  const price = Number((req.body && req.body.price) || 0);
+
+  if (!name) {
+    req.flash("error", "Name is required.");
+    return res.redirect("/vendor/menu");
+  }
+  if (!Number.isFinite(price) || price <= 0) {
+    req.flash("error", "Price must be greater than 0.");
+    return res.redirect("/vendor/menu");
+  }
+
+  await MenuItem.create({
+    shop: req.vendorShopId,
+    name,
+    description,
+    price,
+  });
+
+  req.flash("success", "Menu item created.");
+  return res.redirect("/vendor/menu");
+});
+
+vendorRouter.patch("/vendor/menu/:id", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid menu item id." });
+  }
+
+  const item = await MenuItem.findOne({ _id: id, shop: req.vendorShopId });
+  if (!item) {
+    return res.status(404).json({ error: "Menu item not found." });
+  }
+
+  const name = String((req.body && req.body.name) || "").trim();
+  const description = String((req.body && req.body.description) || "").trim();
+  const price = Number((req.body && req.body.price) || 0);
+
+  if (!name) {
+    return res.status(400).json({ error: "Name is required." });
+  }
+  if (!Number.isFinite(price) || price <= 0) {
+    return res.status(400).json({ error: "Price must be greater than 0." });
+  }
+
+  item.name = name;
+  item.description = description;
+  item.price = price;
+  await item.save();
+
+  return res.json({
+    success: true,
+    message: "Menu item updated.",
+    item: {
+      _id: String(item._id),
+      name: item.name,
+      description: item.description,
+      price: item.price,
+      available: item.available,
+    },
+  });
+});
+
+vendorRouter.delete("/vendor/menu/:id", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(400).json({ error: "Invalid menu item id." });
+  }
+
+  const result = await MenuItem.deleteOne({ _id: id, shop: req.vendorShopId });
+  if (!result.deletedCount) {
+    return res.status(404).json({ error: "Menu item not found." });
+  }
+
+  return res.json({ success: true, message: "Menu item deleted." });
+});
+
 vendorRouter.get("/vendor/orders/pending", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
   const orders = await Order.find({
     shop: req.vendorShopId,
