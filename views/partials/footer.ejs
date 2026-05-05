@@ -1,4 +1,17 @@
     </main>
+    <script>
+      (function () {
+        var btn = document.querySelector("[data-nav-toggle]");
+        var nav = document.getElementById("main-nav");
+        if (!btn || !nav) return;
+        btn.addEventListener("click", function () {
+          nav.classList.toggle("open");
+          var isOpen = nav.classList.contains("open");
+          btn.setAttribute("aria-expanded", isOpen ? "true" : "false");
+          btn.setAttribute("aria-label", isOpen ? "Close menu" : "Open menu");
+        });
+      })();
+    </script>
   </body>
 </html>
 

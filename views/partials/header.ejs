@@ -9,8 +9,20 @@
   <body>
     <header class="topbar">
       <div class="container topbar__inner">
-        <a class="brand" href="/">Smart Canteen</a>
-        <nav class="nav">
+        <div class="topbar__brand-row">
+          <a class="brand" href="/">Smart Canteen</a>
+          <button
+            type="button"
+            class="nav-toggle"
+            data-nav-toggle
+            aria-expanded="false"
+            aria-controls="main-nav"
+            aria-label="Open menu"
+          >
+            ☰
+          </button>
+        </div>
+        <nav id="main-nav" class="nav nav-main" aria-label="Main">
           <a class="nav__link" href="/shops">Canteens</a>
           <% if (currentUser && currentUser.role === "student") { %>
             <a class="nav__link" href="/cart">Cart<% if (typeof cartCount === "number" && cartCount > 0) { %> (<%= cartCount %>)<% } %></a>
@@ -20,13 +32,13 @@
             <%- include("./vendor-nav") %>
           <% } %>
           <% if (currentUser) { %>
-            <span class="nav__text">Hi, <%= currentUser.name %></span>
-            <form method="post" action="/logout" class="inline">
-              <button class="btn btn--ghost" type="submit">Logout</button>
+            <span class="nav__text nav-main__greet">Hi, <%= currentUser.name %></span>
+            <form method="post" action="/logout" class="inline nav-main__logout">
+              <button class="btn btn--ghost nav-main__logout-btn" type="submit">Logout</button>
             </form>
           <% } else { %>
-            <a class="btn btn--ghost" href="/login">Login</a>
-            <a class="btn" href="/signup">Sign up</a>
+            <a class="btn btn--ghost nav-main__auth" href="/login">Login</a>
+            <a class="btn nav-main__auth" href="/signup">Sign up</a>
           <% } %>
         </nav>
       </div>
