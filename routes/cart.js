@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { MenuItem } from "../models/MenuItem.js";
 import { Shop } from "../models/Shop.js";
 import { requireDb } from "../middleware/requireDb.js";
-import { requireStudent } from "../middleware/auth.js";
+import { requireAuth, requireStudent } from "../middleware/auth.js";
 
 export const cartRouter = express.Router();
 
@@ -15,7 +15,7 @@ function getCart(req) {
   return req.session.cart;
 }
 
-cartRouter.get("/cart", requireDb, requireStudent, async (req, res) => {
+cartRouter.get("/cart", requireDb, requireAuth, requireStudent, async (req, res) => {
   const cart = getCart(req);
   let shop = null;
   let lines = [];
@@ -44,7 +44,7 @@ cartRouter.get("/cart", requireDb, requireStudent, async (req, res) => {
   res.render("cart/index", { pageTitle: "Your cart", shop, lines, subtotal });
 });
 
-cartRouter.post("/cart/add", requireDb, requireStudent, async (req, res) => {
+cartRouter.post("/cart/add", requireDb, requireAuth, requireStudent, async (req, res) => {
   const { menuItemId, quantity, redirect } = req.body || {};
   const qty = Math.max(1, Math.min(99, Number(quantity) || 1));
 
@@ -79,7 +79,7 @@ cartRouter.post("/cart/add", requireDb, requireStudent, async (req, res) => {
   return res.redirect(dest);
 });
 
-cartRouter.post("/cart/line", requireDb, requireStudent, async (req, res) => {
+cartRouter.post("/cart/line", requireDb, requireAuth, requireStudent, async (req, res) => {
   const { menuItemId, quantity } = req.body || {};
   const cart = getCart(req);
   const qty = Math.max(0, Math.min(99, Number(quantity) || 0));
@@ -93,7 +93,7 @@ cartRouter.post("/cart/line", requireDb, requireStudent, async (req, res) => {
   return res.redirect("/cart");
 });
 
-cartRouter.post("/cart/clear", requireDb, requireStudent, (req, res) => {
+cartRouter.post("/cart/clear", requireDb, requireAuth, requireStudent, (req, res) => {
   req.session.cart = { shopId: null, items: [] };
   req.flash("success", "Cart cleared.");
   return res.redirect("/cart");

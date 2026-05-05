@@ -33,8 +33,6 @@ authRouter.post("/signup", requireDb, async (req, res) => {
   });
 
   req.session.userId = String(user._id);
-  req.session.role = user.role;
-  req.session.name = user.name;
 
   req.flash("success", "Account created.");
   return res.redirect("/");
@@ -64,8 +62,6 @@ authRouter.post("/login", requireDb, async (req, res) => {
   }
 
   req.session.userId = String(user._id);
-  req.session.role = user.role;
-  req.session.name = user.name;
 
   req.flash("success", "Logged in.");
   return res.redirect("/");

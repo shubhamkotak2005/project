@@ -25,11 +25,8 @@
             <p class="muted menu-list__desc"><%= item.description %></p>
           <% } %>
           <p class="menu-list__price">₹<%= item.price.toFixed(2) %></p>
-          <% if (!item.available) { %>
-            <p class="tag tag--muted">Unavailable</p>
-          <% } %>
         </div>
-        <% if (currentUser && currentUser.role === "student" && item.available) { %>
+        <% if (currentUser && currentUser.role === "student") { %>
           <form method="post" action="/cart/add" class="menu-list__form">
             <input type="hidden" name="menuItemId" value="<%= item._id %>" />
             <input type="hidden" name="redirect" value="/shops/<%= shop.slug %>" />
@@ -38,7 +35,7 @@
             </label>
             <button class="btn btn--small" type="submit">Add</button>
           </form>
-        <% } else if (!currentUser && item.available) { %>
+        <% } else if (!currentUser) { %>
           <a class="btn btn--ghost btn--small" href="/login">Log in to order</a>
         <% } %>
       </li>

@@ -16,6 +16,6 @@ shopsRouter.get("/shops/:slug", requireDb, async (req, res) => {
     req.flash("error", "Canteen not found.");
     return res.redirect("/shops");
   }
-  const menuItems = await MenuItem.find({ shop: shop._id }).sort({ name: 1 }).lean();
+  const menuItems = await MenuItem.find({ shop: shop._id, available: true }).sort({ name: 1 }).lean();
   res.render("shops/menu", { pageTitle: shop.name, shop, menuItems });
 });

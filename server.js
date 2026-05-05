@@ -5,13 +5,14 @@ import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
 import connectDb from "./config/db.js";
-import { User } from "./models/User.js";
 import { Shop } from "./models/Shop.js";
+import { attachUser } from "./middleware/auth.js";
 import { authRouter } from "./routes/auth.js";
 import { shopsRouter } from "./routes/shops.js";
 import { cartRouter } from "./routes/cart.js";
 import { ordersRouter } from "./routes/orders.js";
 import { vendorRouter } from "./routes/vendor.js";
+import { menuRouter } from "./routes/menu.js";
 
 dotenv.config();
 
@@ -37,18 +38,21 @@ app.use(
 
 app.use(flash());
 
+app.use(attachUser);
+
 app.use(async (req, res, next) => {
-  res.locals.currentUser = req.session?.userId
-    ? { id: req.session.userId, role: req.session.role, name: req.session.name }
+  res.locals.currentUser = req.user
+    ? {
+        id: req.user._id,
+        role: req.user.role,
+        name: req.user.name,
+      }
     : null;
 
   res.locals.vendorShop = null;
-  if (req.session?.userId && req.session.role === "vendor") {
+  if (req.user?.role === "vendor" && req.user.shop) {
     try {
-      const u = await User.findById(req.session.userId).select("shop").lean();
-      if (u?.shop) {
-        res.locals.vendorShop = await Shop.findById(u.shop).select("name slug").lean();
-      }
+      res.locals.vendorShop = await Shop.findById(req.user.shop).select("name slug").lean();
     } catch {
       /* ignore */
     }
@@ -74,6 +78,7 @@ app.use(authRouter);
 app.use(shopsRouter);
 app.use(cartRouter);
 app.use(ordersRouter);
+app.use(menuRouter);
 app.use(vendorRouter);
 
 try {

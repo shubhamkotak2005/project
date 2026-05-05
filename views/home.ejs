@@ -19,10 +19,11 @@
           <a class="btn" href="/shops">Browse canteens</a>
           <a class="btn btn--ghost" href="/orders">My orders</a>
         </div>
-      <% } else { %>
+      <% } else if (currentUser.role === "vendor") { %>
         <p class="muted">Pending orders → mark ready → verify pickup code → completed.</p>
         <div class="row">
           <a class="btn" href="/vendor/orders/pending">Pending orders</a>
+          <a class="btn btn--ghost" href="/vendor/menu">Manage menu</a>
           <a class="btn btn--ghost" href="/vendor/verify">Verify pickup</a>
           <a class="btn btn--ghost" href="/vendor/orders/completed">Completed</a>
         </div>

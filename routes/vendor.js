@@ -1,12 +1,18 @@
 import express from "express";
 import mongoose from "mongoose";
 import { Order } from "../models/Order.js";
+import { MenuItem } from "../models/MenuItem.js";
 import { requireDb } from "../middleware/requireDb.js";
-import { requireVendorShop } from "../middleware/auth.js";
+import { requireAuth, requireVendor, requireVendorShop } from "../middleware/auth.js";
 
 export const vendorRouter = express.Router();
 
-vendorRouter.get("/vendor/orders/pending", requireDb, requireVendorShop, async (req, res) => {
+vendorRouter.get("/vendor/menu", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
+  const menuItems = await MenuItem.find({ shop: req.vendorShopId }).sort({ name: 1 }).lean();
+  res.render("vendor/menu", { pageTitle: "Manage menu", menuItems });
+});
+
+vendorRouter.get("/vendor/orders/pending", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
   const orders = await Order.find({
     shop: req.vendorShopId,
     status: "paid",
@@ -17,7 +23,7 @@ vendorRouter.get("/vendor/orders/pending", requireDb, requireVendorShop, async (
   res.render("vendor/pending-orders", { pageTitle: "Pending orders", orders });
 });
 
-vendorRouter.post("/vendor/orders/:id/ready", requireDb, requireVendorShop, async (req, res) => {
+vendorRouter.post("/vendor/orders/:id/ready", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) {
     req.flash("error", "Invalid order.");
@@ -42,7 +48,7 @@ vendorRouter.post("/vendor/orders/:id/ready", requireDb, requireVendorShop, asyn
   return res.redirect("/vendor/orders/pending");
 });
 
-vendorRouter.get("/vendor/verify", requireDb, requireVendorShop, async (req, res) => {
+vendorRouter.get("/vendor/verify", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
   const waitingPickup = await Order.countDocuments({
     shop: req.vendorShopId,
     status: "ready_for_pickup",
@@ -50,7 +56,7 @@ vendorRouter.get("/vendor/verify", requireDb, requireVendorShop, async (req, res
   res.render("vendor/verify", { pageTitle: "Verify pickup", waitingPickup });
 });
 
-vendorRouter.post("/vendor/verify", requireDb, requireVendorShop, async (req, res) => {
+vendorRouter.post("/vendor/verify", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
   const raw = String((req.body && req.body.otp) || "").replace(/\D/g, "");
   const otp = raw.slice(0, 6);
 
@@ -77,7 +83,7 @@ vendorRouter.post("/vendor/verify", requireDb, requireVendorShop, async (req, re
   return res.redirect("/vendor/verify");
 });
 
-vendorRouter.get("/vendor/orders/completed", requireDb, requireVendorShop, async (req, res) => {
+vendorRouter.get("/vendor/orders/completed", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
   const orders = await Order.find({
     shop: req.vendorShopId,
     status: "completed",

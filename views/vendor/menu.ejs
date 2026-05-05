@@ -1,0 +1,90 @@
+<%- include("../partials/header", { pageTitle }) %>
+
+<section class="hero hero--compact">
+  <h1>Manage menu</h1>
+  <p class="muted">Toggle items on or off for students browsing your canteen.</p>
+</section>
+
+<% if (!menuItems.length) { %>
+  <div class="card"><p class="muted">No menu items yet.</p></div>
+<% } else { %>
+  <div class="card" style="overflow-x: auto;">
+    <table class="table vendor-menu-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Price</th>
+          <th>Status</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% menuItems.forEach((item) => { %>
+          <tr data-item-row data-item-id="<%= item._id %>">
+            <td><strong class="vendor-menu-table__name"><%= item.name %></strong></td>
+            <td class="vendor-menu-table__price">₹<%= Number(item.price).toFixed(2) %></td>
+            <td>
+              <span class="tag vendor-menu-table__badge <%= item.available ? "tag--ok" : "tag--muted" %>" data-availability-badge>
+                <%= item.available ? "Available" : "Unavailable" %>
+              </span>
+            </td>
+            <td>
+              <button
+                type="button"
+                class="btn btn--small btn--ghost vendor-menu-table__toggle"
+                data-toggle-availability
+                data-item-id="<%= item._id %>"
+                data-available="<%= item.available ? "true" : "false" %>"
+              >
+                <%= item.available ? "Mark unavailable" : "Mark available" %>
+              </button>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+<% } %>
+
+<script>
+(function () {
+  document.querySelectorAll("[data-toggle-availability]").forEach(function (btn) {
+    btn.addEventListener("click", async function () {
+      var id = btn.getAttribute("data-item-id");
+      if (!id || btn.disabled) return;
+      btn.disabled = true;
+      btn.setAttribute("aria-busy", "true");
+      try {
+        var res = await fetch("/menu/" + encodeURIComponent(id) + "/toggle", {
+          method: "PATCH",
+          headers: { Accept: "application/json" },
+          credentials: "same-origin",
+        });
+        var body = await res.json().catch(function () { return {}; });
+        if (!res.ok) {
+          alert(body.error || "Could not update item.");
+          return;
+        }
+        var item = body.item;
+        if (!item) return;
+        var row = btn.closest("[data-item-row]");
+        var badge = row && row.querySelector("[data-availability-badge]");
+        if (badge) {
+          badge.textContent = item.available ? "Available" : "Unavailable";
+          badge.classList.toggle("tag--ok", item.available);
+          badge.classList.toggle("tag--muted", !item.available);
+        }
+        btn.setAttribute("data-available", item.available ? "true" : "false");
+        btn.textContent = item.available ? "Mark unavailable" : "Mark available";
+      } catch (e) {
+        alert("Network error. Try again.");
+      } finally {
+        btn.disabled = false;
+        btn.removeAttribute("aria-busy");
+      }
+    });
+  });
+})();
+</script>
+
+<%- include("../partials/footer") %>

@@ -4,7 +4,7 @@ import { MenuItem } from "../models/MenuItem.js";
 import { Shop } from "../models/Shop.js";
 import { Order } from "../models/Order.js";
 import { requireDb } from "../middleware/requireDb.js";
-import { requireStudent } from "../middleware/auth.js";
+import { requireAuth, requireStudent } from "../middleware/auth.js";
 import { generateOtp } from "../utils/otp.js";
 
 export const ordersRouter = express.Router();
@@ -17,7 +17,7 @@ function getCart(req) {
   return req.session.cart;
 }
 
-ordersRouter.post("/orders/checkout", requireDb, requireStudent, async (req, res) => {
+ordersRouter.post("/orders/checkout", requireDb, requireAuth, requireStudent, async (req, res) => {
   const cart = getCart(req);
   if (!cart.shopId || !cart.items.length) {
     req.flash("error", "Your cart is empty.");
@@ -76,7 +76,7 @@ ordersRouter.post("/orders/checkout", requireDb, requireStudent, async (req, res
   return res.redirect(`/orders/${order._id}`);
 });
 
-ordersRouter.get("/orders", requireDb, requireStudent, async (req, res) => {
+ordersRouter.get("/orders", requireDb, requireAuth, requireStudent, async (req, res) => {
   const orders = await Order.find({ customer: req.session.userId })
     .sort({ createdAt: -1 })
     .populate("shop", "name slug")
@@ -84,7 +84,7 @@ ordersRouter.get("/orders", requireDb, requireStudent, async (req, res) => {
   res.render("orders/index", { pageTitle: "My orders", orders });
 });
 
-ordersRouter.get("/orders/:id", requireDb, requireStudent, async (req, res) => {
+ordersRouter.get("/orders/:id", requireDb, requireAuth, requireStudent, async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) {
     req.flash("error", "Order not found.");
