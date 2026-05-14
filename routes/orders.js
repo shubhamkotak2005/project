@@ -84,6 +84,20 @@ ordersRouter.get("/orders", requireDb, requireAuth, requireStudent, async (req, 
   res.render("orders/index", { pageTitle: "My orders", orders });
 });
 
+ordersRouter.get("/api/orders/:id/status", requireDb, requireAuth, requireStudent, async (req, res) => {
+  const { id } = req.params;
+  if (!mongoose.isValidObjectId(id)) {
+    return res.status(404).json({ error: "Order not found." });
+  }
+
+  const order = await Order.findById(id).select("customer status").lean();
+  if (!order || String(order.customer) !== String(req.session.userId)) {
+    return res.status(404).json({ error: "Order not found." });
+  }
+
+  return res.json({ status: order.status });
+});
+
 ordersRouter.get("/orders/:id", requireDb, requireAuth, requireStudent, async (req, res) => {
   const { id } = req.params;
   if (!mongoose.isValidObjectId(id)) {

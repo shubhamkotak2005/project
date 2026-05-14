@@ -39,4 +39,32 @@
   <p class="cart-total"><strong>Total:</strong> ₹<%= order.total.toFixed(2) %></p>
 </div>
 
+<script>
+  (function () {
+    var orderId = "<%= order._id %>";
+    var currentStatus = "<%= order.status %>";
+
+    var intervalId = setInterval(async function () {
+      try {
+        var res = await fetch("/api/orders/" + encodeURIComponent(orderId) + "/status", {
+          headers: { Accept: "application/json" },
+          credentials: "same-origin",
+        });
+        if (!res.ok) return;
+
+        var data = await res.json();
+        if (data.status && data.status !== currentStatus) {
+          window.location.reload();
+        }
+      } catch (e) {
+        // Keep polling; a temporary network hiccup should not break the page.
+      }
+    }, 5000);
+
+    window.addEventListener("beforeunload", function () {
+      clearInterval(intervalId);
+    });
+  })();
+</script>
+
 <%- include("../partials/footer") %>
