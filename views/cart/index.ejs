@@ -83,8 +83,22 @@
       description: "Order Payment",
       order_id: order.id,
 
-      handler: async function () {
-        window.location.href = "/orders/checkout";
+      handler: async function (response) {
+        const verifyResponse = await fetch("/verify-payment", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(response),
+        });
+
+        const data = await verifyResponse.json();
+
+        if (data.success) {
+          window.location.href = `/orders/${data.orderId}`;
+        } else {
+          alert("Payment verification failed");
+        }
       },
     };
 

@@ -1,4 +1,5 @@
 import express from "express";
+import crypto from "crypto";
 import mongoose from "mongoose";
 import { MenuItem } from "../models/MenuItem.js";
 import { Shop } from "../models/Shop.js";
@@ -35,6 +36,108 @@ ordersRouter.post("/create-razorpay-order", async (req, res) => {
     res.status(500).json({ error: "Failed to create Razorpay order" });
   }
 });
+
+ordersRouter.post(
+  "/verify-payment",
+  requireDb,
+  requireAuth,
+  requireStudent,
+  async (req, res) => {
+    try {
+      const {
+        razorpay_order_id,
+        razorpay_payment_id,
+        razorpay_signature,
+      } = req.body;
+
+      const sign = razorpay_order_id + "|" + razorpay_payment_id;
+
+      const expectedSign = crypto
+        .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+        .update(sign.toString())
+        .digest("hex");
+
+      const isAuthentic = expectedSign === razorpay_signature;
+
+      if (!isAuthentic) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid payment signature",
+        });
+      }
+
+      const cart = getCart(req);
+
+      if (!cart.shopId || !cart.items.length) {
+        return res.status(400).json({
+          success: false,
+          message: "Cart is empty",
+        });
+      }
+
+      const shop = await Shop.findById(cart.shopId).lean();
+
+      const ids = cart.items.map((l) => l.menuItemId);
+
+      const menuItems = await MenuItem.find({
+        _id: { $in: ids },
+        shop: cart.shopId,
+        available: true,
+      }).lean();
+
+      const byId = new Map(menuItems.map((m) => [String(m._id), m]));
+
+      const orderItems = [];
+      let total = 0;
+
+      for (const line of cart.items) {
+        const m = byId.get(String(line.menuItemId));
+
+        if (!m) continue;
+
+        const q = Math.max(1, Math.min(99, Number(line.quantity) || 1));
+
+        orderItems.push({
+          menuItem: m._id,
+          name: m.name,
+          price: m.price,
+          quantity: q,
+        });
+
+        total += m.price * q;
+      }
+
+      const pickupOtp = generateOtp();
+
+      const order = await Order.create({
+        customer: req.session.userId,
+        shop: cart.shopId,
+        items: orderItems,
+        total,
+        status: "paid",
+        pickupOtp,
+        paymentNote: razorpay_payment_id,
+      });
+
+      req.session.cart = {
+        shopId: null,
+        items: [],
+      };
+
+      return res.json({
+        success: true,
+        orderId: order._id,
+      });
+    } catch (err) {
+      console.error(err);
+
+      return res.status(500).json({
+        success: false,
+        message: "Payment verification failed",
+      });
+    }
+  }
+);
 
 ordersRouter.post(
   "/orders/checkout",
