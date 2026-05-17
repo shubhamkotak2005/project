@@ -76,6 +76,12 @@ ordersRouter.post(
       }
 
       const shop = await Shop.findById(cart.shopId).lean();
+      if (!shop || shop.isOpen === false) {
+        return res.status(400).json({
+          success: false,
+          message: "This shop is currently closed.",
+        });
+      }
 
       const ids = cart.items.map((l) => l.menuItemId);
 
@@ -156,6 +162,10 @@ ordersRouter.post(
       req.session.cart = { shopId: null, items: [] };
       req.flash("error", "That canteen no longer exists.");
       return res.redirect("/shops");
+    }
+    if (shop.isOpen === false) {
+      req.flash("error", "This shop is currently closed.");
+      return res.redirect("/cart");
     }
 
     const ids = cart.items.map((l) => l.menuItemId);

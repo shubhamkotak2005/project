@@ -8,6 +8,11 @@
 
 <section class="hero hero--compact">
   <h1><%= shop.name %></h1>
+  <p>
+    <span class="tag <%= shop.isOpen ? "tag--ok" : "tag--warn" %>">
+      <%= shop.isOpen ? "Open" : "Closed" %>
+    </span>
+  </p>
   <% if (shop.description) { %>
     <p class="muted"><%= shop.description %></p>
   <% } %>
@@ -26,7 +31,7 @@
           <% } %>
           <p class="menu-list__price">₹<%= item.price.toFixed(2) %></p>
         </div>
-        <% if (currentUser && currentUser.role === "student") { %>
+        <% if (currentUser && currentUser.role === "student" && shop.isOpen) { %>
           <form method="post" action="/cart/add" class="menu-list__form">
             <input type="hidden" name="menuItemId" value="<%= item._id %>" />
             <input type="hidden" name="redirect" value="/shops/<%= shop.slug %>" />
@@ -35,6 +40,8 @@
             </label>
             <button class="btn btn--small" type="submit">Add</button>
           </form>
+        <% } else if (currentUser && currentUser.role === "student") { %>
+          <span class="tag tag--warn">Closed</span>
         <% } else if (!currentUser) { %>
           <a class="btn btn--ghost btn--small" href="/login">Log in to order</a>
         <% } %>

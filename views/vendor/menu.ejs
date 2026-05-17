@@ -6,6 +6,19 @@
 </section>
 
 <div class="card">
+  <div class="row row--split">
+    <span class="tag <%= shop.isOpen ? "tag--ok" : "tag--warn" %>">
+      <%= shop.isOpen ? "Shop Open" : "Shop Closed" %>
+    </span>
+    <form method="post" action="/vendor/shop/toggle">
+      <button class="btn" type="submit">
+        <%= shop.isOpen ? "Close Shop" : "Open Shop" %>
+      </button>
+    </form>
+  </div>
+</div>
+
+<div class="card">
   <h2 class="h2">Add new item</h2>
   <form method="post" action="/vendor/menu" class="form">
     <label>

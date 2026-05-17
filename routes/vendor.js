@@ -2,15 +2,59 @@ import express from "express";
 import mongoose from "mongoose";
 import { Order } from "../models/Order.js";
 import { MenuItem } from "../models/MenuItem.js";
+import { Shop } from "../models/Shop.js";
 import { requireDb } from "../middleware/requireDb.js";
 import { requireAuth, requireVendor, requireVendorShop } from "../middleware/auth.js";
 
 export const vendorRouter = express.Router();
 
 vendorRouter.get("/vendor/menu", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
+  const shop = await Shop.findById(req.vendorShopId).lean();
+  if (!shop) {
+    req.flash("error", "Shop not found.");
+    return res.redirect("/");
+  }
+  if (shop && typeof shop.isOpen !== "boolean") shop.isOpen = true;
   const menuItems = await MenuItem.find({ shop: req.vendorShopId }).sort({ name: 1 }).lean();
-  res.render("vendor/menu", { pageTitle: "Manage menu", menuItems });
+  res.render("vendor/menu", { pageTitle: "Manage menu", shop, menuItems });
 });
+
+vendorRouter.post(
+  "/vendor/shop/toggle",
+  requireDb,
+  requireAuth,
+  requireVendor,
+  requireVendorShop,
+  async (req, res) => {
+    try {
+      const shop = await Shop.findById(req.vendorShopId);
+
+      if (!shop) {
+        req.flash("error", "Shop not found.");
+        return res.redirect("/vendor/menu");
+      }
+
+      shop.isOpen = !shop.isOpen;
+
+      await shop.save();
+
+      req.flash(
+        "success",
+        shop.isOpen
+          ? "Shop opened successfully."
+          : "Shop closed successfully."
+      );
+
+      return res.redirect("/vendor/menu");
+    } catch (error) {
+      console.error(error);
+
+      req.flash("error", "Failed to update shop status.");
+
+      return res.redirect("/vendor/menu");
+    }
+  }
+);
 
 vendorRouter.post("/vendor/menu", requireDb, requireAuth, requireVendor, requireVendorShop, async (req, res) => {
   const name = String((req.body && req.body.name) || "").trim();

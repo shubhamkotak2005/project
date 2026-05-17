@@ -6,6 +6,10 @@ const shopSchema = new mongoose.Schema(
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String, default: "" },
     vendor: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    isOpen: {
+      type: Boolean,
+      default: true,
+    },
   },
   { timestamps: true }
 );

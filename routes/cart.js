@@ -60,11 +60,16 @@ cartRouter.post("/cart/add", requireDb, requireAuth, requireStudent, async (req,
   }
 
   const shopIdStr = String(item.shop);
+  const shop = await Shop.findById(item.shop).lean();
+  if (!shop || shop.isOpen === false) {
+    req.flash("error", "This shop is currently closed.");
+    return res.redirect(redirect || "/shops");
+  }
+
   const cart = getCart(req);
 
   if (cart.shopId && String(cart.shopId) !== shopIdStr && cart.items.length) {
     req.flash("error", "Your cart has items from another canteen. Clear the cart first.");
-    const shop = await Shop.findById(item.shop).lean();
     return res.redirect(shop ? `/shops/${shop.slug}` : "/shops");
   }
 
@@ -74,7 +79,6 @@ cartRouter.post("/cart/add", requireDb, requireAuth, requireStudent, async (req,
   else cart.items.push({ menuItemId: String(menuItemId), quantity: qty });
 
   req.flash("success", "Added to cart.");
-  const shop = await Shop.findById(item.shop).lean();
   const dest = redirect || (shop ? `/shops/${shop.slug}` : "/shops");
   return res.redirect(dest);
 });

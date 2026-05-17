@@ -1,0 +1,70 @@
+<%- include("../partials/header", { pageTitle }) %>
+
+<section class="hero hero--compact">
+  <h1>Admin Dashboard</h1>
+  <p class="muted">Platform overview and recent order activity.</p>
+</section>
+
+<div class="grid grid--shops">
+  <div class="card">
+    <p class="muted small">Total Orders</p>
+    <h2 class="h2"><%= stats.totalOrders %></h2>
+  </div>
+  <div class="card">
+    <p class="muted small">Revenue</p>
+    <h2 class="h2">₹<%= Number(stats.totalRevenue).toFixed(2) %></h2>
+  </div>
+  <div class="card">
+    <p class="muted small">Pending Orders</p>
+    <h2 class="h2"><%= stats.pendingOrders %></h2>
+  </div>
+  <div class="card">
+    <p class="muted small">Completed Orders</p>
+    <h2 class="h2"><%= stats.completedOrders %></h2>
+  </div>
+  <div class="card">
+    <p class="muted small">Vendors</p>
+    <h2 class="h2"><%= stats.totalVendors %></h2>
+  </div>
+  <div class="card">
+    <p class="muted small">Shops</p>
+    <h2 class="h2"><%= stats.totalShops %></h2>
+  </div>
+</div>
+
+<div class="card" style="overflow-x: auto; margin-top: 18px;">
+  <h2 class="h2">Recent Orders</h2>
+
+  <% if (!recentOrders.length) { %>
+    <p class="muted">No orders yet.</p>
+  <% } else { %>
+    <table class="table">
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Student Name</th>
+          <th>Shop Name</th>
+          <th>Status</th>
+          <th>Total</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% recentOrders.forEach((order) => { %>
+          <tr>
+            <td>…<%= String(order._id).slice(-6) %></td>
+            <td><%= order.customer?.name || "Student" %></td>
+            <td><%= order.shop?.name || "Shop" %></td>
+            <td><span class="tag tag--muted"><%= order.status %></span></td>
+            <td>₹<%= Number(order.total).toFixed(2) %></td>
+            <td><%= new Date(order.createdAt).toLocaleString("en-IN", {
+  timeZone: "Asia/Kolkata"
+}) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</div>
+
+<%- include("../partials/footer") %>
